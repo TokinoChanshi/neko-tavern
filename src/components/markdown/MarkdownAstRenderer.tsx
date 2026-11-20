@@ -145,11 +145,32 @@ const MarkdownPhrasingContentItem = memo(function MarkdownPhrasingContentItem({
   }
 })
 
+const DIALOGUE_PATTERN = /(「[^」]+」|“[^”]+”)/g
+
+const renderLineSegments = (line: string, lineIndex: number): ReactNode => {
+  const parts = line.split(DIALOGUE_PATTERN)
+  if (parts.length === 1) {
+    return line
+  }
+  return parts.map((part, idx) =>
+    idx % 2 === 1 ? (
+      <span key={`${lineIndex}-q-${idx}`} className="mn-dialogue-quote">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  )
+}
+
 // 按 \n 拆行插 <br>：源文每个换行（含软换行）都渲染为视觉换行
 const TextContent = memo(function TextContent({ children }: { children: string }) {
   const result: ReactNode[] = []
   children.split(/\r?\n/).forEach((line, index) => {
-    result.push(<span key={index + 's'}>{line}</span>, <br key={index + 'br'} />)
+    result.push(
+      <span key={index + 's'}>{renderLineSegments(line, index)}</span>,
+      <br key={index + 'br'} />
+    )
   })
   result.pop()
   return result

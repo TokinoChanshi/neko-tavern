@@ -1,13 +1,18 @@
-.view {
+/* ==========================================================================
+   1. 原版 DeepSeek 经典会话页样式 (dsView)
+   ========================================================================== */
+.dsView {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
+  background: var(--dsw-alias-bg-base);
 }
 
-.header {
+.dsHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-shrink: 0;
   height: 60px;
   padding: 12px 18px 0;
@@ -15,7 +20,7 @@
   background: var(--dsw-alias-bg-base);
 }
 
-.title {
+.dsTitle {
   max-width: 480px;
   padding: 8px 12px;
   overflow: hidden;
@@ -25,8 +30,259 @@
   color: var(--dsw-alias-label-primary);
 }
 
-.withCollapsedSider {
+.dsWithCollapsed {
   margin-left: 113px;
+}
+
+.dsHeaderTools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dsMiniDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.dsMiniDot {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  background: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: block;
+  }
+}
+
+.dsMiniDotOn {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.dsSubtleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dsSubtleChip:hover {
+  background: var(--dsw-specific-sidebar-nav-item-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* ==========================================================================
+   2. 商业级沉浸陪伴舞台会话页样式 (view)
+   ========================================================================== */
+.view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background-image: var(--mn-glow);
+}
+
+.header {
+  position: relative;
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 58px;
+  padding: 8px 20px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  background: var(--mn-glass-bg, var(--dsw-alias-bg-layer-2));
+  backdrop-filter: blur(16px);
+}
+
+.headerInner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.withCollapsedSider {
+  padding-left: 96px;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.characterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 4px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  max-width: 380px;
+  min-width: 0;
+  transition:
+    border-color 150ms,
+    background-color 150ms;
+}
+
+.characterPill:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+}
+
+.characterMeta {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+
+  strong {
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  span {
+    font-size: 12px;
+    color: var(--dsw-alias-label-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.toolPill,
+.iconPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 150ms,
+    background-color 150ms,
+    color 150ms;
+
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dsw-alias-brand-primary);
+  }
+}
+
+.iconPill {
+  width: 34px;
+  padding: 0;
+}
+
+.toolPill:hover,
+.iconPill:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+  color: var(--dsw-alias-brand-text);
+}
+
+.toolPillActive {
+  border-color: var(--dsw-alias-button-ghost-active-border);
+  background: var(--mn-selection);
+  color: var(--dsw-alias-brand-text);
+}
+
+.stageBody {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.chatPane {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileBar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 8px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+  flex-shrink: 0;
+}
+
+.mobileBar .characterPill {
+  flex: 1;
+  max-width: none;
+  min-height: 34px;
+  padding: 4px 10px 4px 6px;
+}
+
+.characterPillName {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inputContainer {
@@ -40,13 +296,7 @@
   width: calc(var(--message-list-max-width) - 64px);
   max-width: calc(100% - 32px);
   margin: auto auto 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 30%,
-    var(--dsw-alias-bg-base) 30%,
-    var(--dsw-alias-bg-base) 100%
-  );
+  padding-top: 8px;
 }
 
 .caveat {

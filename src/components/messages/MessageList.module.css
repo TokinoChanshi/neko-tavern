@@ -1,4 +1,5 @@
 .container {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -10,6 +11,27 @@
 
 .scroll {
   display: contents;
+}
+
+/* 移动端窄屏 与 桌面端手机 APP 模式 (data-mn-shell='mobile') 统一固定底栏与滚动容器 */
+:global(body[data-mn-shell='mobile']) .container {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+
+:global(body[data-mn-shell='mobile']) .scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-color: var(--scroll-color) transparent;
+}
+
+:global(body[data-mn-shell='mobile']) .column {
+  max-width: calc(100% - 24px);
+  padding-bottom: 16px;
 }
 
 @media not all and (min-width: 768px) {
@@ -27,6 +49,10 @@
     overscroll-behavior-y: contain;
     scrollbar-color: var(--scroll-color) transparent;
   }
+
+  .column {
+    max-width: calc(100% - 26px);
+  }
 }
 
 .column {
@@ -34,4 +60,47 @@
   max-width: calc(100% - 40px);
   margin: 0 auto;
   padding-bottom: 24px;
+}
+
+.jumpBottomWrap {
+  position: sticky;
+  bottom: 84px;
+  z-index: 15;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  margin-top: -36px;
+  margin-bottom: 6px;
+}
+
+:global(body[data-mn-shell='mobile']) .jumpBottomWrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 92px;
+  margin: 0;
+}
+
+.jumpBottomBtn {
+  pointer-events: auto;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--mn-glass-bg, var(--dsw-alias-bg-layer-2));
+  backdrop-filter: blur(14px);
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--mn-card-shadow);
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--dsw-alias-brand-primary);
+  }
 }

@@ -1,75 +1,68 @@
-# chat-demo
+# 猫猫酒馆 · 专属角色互动小馆
 
-English | [简体中文](README.zh-CN.md)
+基于 [DeepSeek 官方 chat-demo](https://github.com/deepseek-ai/chat-demo) 二次开发的本地角色互动与陪伴酒馆客户端。在完整保留流式回复、剧情分支切换与历史记录导入的基础上，提供 **「宽屏沉浸酒馆 / 手机陪伴 APP 模式 / DeepSeek 原版经典 UI」三端形态自由切换**、**陪伴高定与 DS 原版双套多主题皮肤**、**高清商业级角色立绘与实景壁纸**、**世界书 / 心事手札** 以及 **原生 Windows 桌面客户端与手机小窗启动器**。
 
-A static chat demo powered by the DeepSeek API. No application backend is required: the browser connects directly to the configured API service.
+## 一键启动（桌面客户端 / 手机 APP 小窗 / 命令行）
 
-You can [try the app online](https://deepseek-ai.github.io/chat-demo/) or download the archive from [Releases](https://github.com/deepseek-ai/deepseek-chat-demo/releases), extract it, and double-click `index.html` to use it locally without installation or a build. Enter your API key in Settings before your first chat.
+### 方式一：Windows 原生无黑框客户端（推荐）
 
-## Getting started
+从源码首次使用时，请先按下方命令安装依赖、运行 `pnpm build` 和 `pnpm build:client`，再双击项目根目录生成的两个客户端。仓库不包含编译后的 EXE；客户端内置系统托盘，会自动启动本地后台服务。
 
-Install Node.js 22.12+ and pnpm, then run:
+- **`猫猫酒馆客户端.exe`**：以 `1340×880` 独立无地址栏桌面客户端启动宽屏酒馆。
+- **`猫猫酒馆·手机APP模式.exe`**：以 `430×880` 竖屏独立小窗启动四栏陪伴手机 APP（`酒馆 / 消息 / 名册 / 我的`）。
+- **系统托盘菜单**：右键右下角猫咪图标，可随时唤出桌面版、手机 APP 小窗、DeepSeek 原版界面、一键开启**局域网真机手机连接**或彻底退出后台服务。
 
-```sh
-git clone https://github.com/deepseek-ai/chat-demo.git
-cd chat-demo
-pnpm install
-pnpm dev
-```
+### 方式二：命令行构建与启动
 
-Open http://localhost:8090.
-
-To build the static site:
+需要 Node.js 22.17+ 和 pnpm 10.28.2。在项目目录执行：
 
 ```sh
+pnpm install --frozen-lockfile
 pnpm build
+pnpm build:client   # 可选：重新编译 Windows 桌面客户端与手机 APP 客户端 .exe
+pnpm start          # 仅本机访问：http://127.0.0.1:8765
 ```
 
-The output is written to `dist/`. Deploy it to a static web server or open `dist/index.html` directly. Opening the file directly requires browser support for storage on `file://` pages and an API service that permits their cross-origin requests.
+- 电脑浏览器直接体验手机 APP 模式：打开 `http://127.0.0.1:8765/?mode=mobile`
+- 电脑浏览器直接进入 DeepSeek 经典原版：打开 `http://127.0.0.1:8765/?mode=ds`
+- **真机手机 Wi-Fi 访问与安装 PWA 应用**：运行 `pnpm start:lan`（或在客户端托盘勾选「开启局域网手机真机连接」），手机连接同一 Wi-Fi 打开终端提示的 `http://192.168.x.x:8765/?mode=mobile`，在浏览器菜单点击 **「添加到主屏幕 / 安装应用」** 即可获得全屏原生 APP 体验。
 
-## Features
+## 核心亮点与快速上手
 
-- Multiple conversations with automatic titles, renaming, and deletion; edit prompts, regenerate replies, and switch between message branches.
-- Streaming replies, deep thinking, smart search, link reading, and source citations; stop generation or continue eligible replies.
-- Upload, paste, or drag and drop attachments; use voice input and read replies aloud. A live audio spectrum appears in the first row of the input area while recording on mobile.
-- Markdown, syntax highlighting, KaTeX math, and Mermaid diagrams.
-- Simplified Chinese and English, light and dark themes, mobile layouts, location settings, and chat history import and export.
+1. **三端界面形态即时切换**：
+   - **宽屏酒馆（`companion`）**：4 列竖版高清立绘海报墙、一键「进入故事 →」、初见序幕台、气泡/轻小说/纯净三舞台与右侧角色档案栏。
+   - **手机 APP 模式（`mobile`）**：商业陪伴产品级四栏底部导航（`酒馆` / `消息` / `名册` / `我的`）、顶部在线角色星环、底部角色详情抽屉与全屏沉浸聊天室；在电脑宽屏下自动呈现精致无边框旗舰手机预览壳，在窄屏/独立小窗/真机下自动全屏铺满。
+   - **DeepSeek 原版经典 UI（`ds`）**：100% 还原官方极简居中布局与侧边栏。
+2. **双套独立多主题体系（均完整支持浅色白昼 / 微醺夜色 / 跟随系统）**：
+   - **猫猫酒馆 6 款高定陪伴皮肤**：`樱雾白桃`、`深空星夜`、`丝绒红茶`、`森屿青提`、`黑曜玫瑰`、`DS 清透蓝`，搭配 4 幅高清实景壁纸（`暮色花房`、`星穹钟楼`、`暖灯酒馆`、`晨雾茶庭`）、本地自定义壁纸上传、毛玻璃气泡与动态粒子光影。
+   - **DeepSeek 原版专属 6 款极简主题**：`官方深海蓝`、`暖陶书卷（Claude 羊皮纸风）`、`雾粉微光`、`松烟墨绿`、`幻夜紫晶`、`水墨极夜（OLED 纯黑）`，可在 DS 顶栏彩色圆点或装扮工坊一键切换。
+3. **馆藏高清立绘角色与自由定制**：内置四位馆藏角色（温柔调酒师「沈星回」、清冷古籍修复师「陆沉渊」、化形白猫少年「糯米」、傲娇青年钢琴家「顾言深」）及额外可选立绘，支持上传本地头像、粘贴 `https://` 外链图片或导入 JSON / PNG 角色卡。
+4. **人设、世界书与心事手札**：支持 `{{char}}`、`{{user}}` 宏替换；世界书按上下文关键词动态触发；「心事手札」可随时记录关系进展与约定并自动注入后续提示词。
 
-## Data and storage
+### 多渠道预设模型接入（19 款内置渠道 · 独立记忆密钥）
 
-Your API key and settings are stored in the browser's localStorage. Conversations and original attachments are stored in IndexedDB. Local data is isolated by browser profile and site origin. Sending messages, uploading attachments, and using speech features sends the relevant content to the configured API service.
+在「设置 → 模型连接」中内置了完整的预设渠道矩阵，**每个渠道在本机独立记忆各自的 API Key、端点与模型**，配置一次后即可随时一键切换，并支持点击 **「从接口拉取可用模型」** 动态列出账号下的实时模型目录：
 
-History import and export in Settings use ZIP archives. After confirmation and successful validation, importing replaces all local conversations and attachments. Exports include conversations and locally available original images, but exclude API keys, settings, and original non-image attachments. See the [history import/export documentation (Chinese)](src/services/chat/history/README.md) for the archive format and preservation details.
+- **Agent 与聚合网关**：**OpenCode Zen**（标准网关 & Go 订阅网关，支持填 `public` 体验免费模型）、**Cline 官方渠道**（`api.cline.bot/api/v1`）、**硅基流动 SiliconFlow**、**OpenRouter**。
+- **国内主流云与大模型**：**火山引擎 · 火山方舟**（含标准 `/api/v3` 与 `/api/coding/v3` 双端点，支持豆包 Seed / 满血 DeepSeek 及 `ep-xxxx` 接入点）、**DeepSeek 官方**、**阿里云百炼（通义千问）**、**MiniMax 稀宇**、**阶跃星辰 StepFun**、**月之暗面 Kimi**、**智谱清言 GLM**、**腾讯云（知识引擎 DeepSeek / 混元）**。
+- **海外直连、通用中转与本地部署**：**Anthropic Claude**（原生 `/v1/messages` 协议）、**OpenAI 官方**、**Google Gemini**、**xAI Grok**、**NewAPI / OneAPI 通用中转站**，以及免密钥离线直连的 **Ollama** 与 **LM Studio**。
 
-Settings → Data → Delete all chats clears all local conversations, original attachments, and unsent drafts after confirmation. It stops ongoing replies and returns to a new chat. Your API key and settings are preserved; files already uploaded to the API service are not deleted.
+### 备份、导入与本地隐私
 
-## Development
+- **酒馆完整备份（JSON，推荐）**：位于「设置 → 备份与数据」，一键打包聊天分支、图片附件、角色名册、人设、世界书、置顶与心事手札（向下兼容旧版 `mengnan-backup` 备份文件）。
+- **纯聊天记录导出 / 导入（ZIP）**：兼容 DeepSeek 官方 **v3 ZIP**（`export_format_version: 3`），详见 [历史记录说明](src/services/chat/history/README.md)。
+- **全本地私密存储**：`.data/` 保存所有会话、角色与连接配置；默认仅监听 `127.0.0.1`，API Key 绝不写入导出备份。
 
-| Command       | Description                  |
-| ------------- | ---------------------------- |
-| `pnpm dev`    | Start the development server |
-| `pnpm build`  | Build into `dist/`           |
-| `pnpm type`   | Run TypeScript type checks   |
-| `pnpm lint`   | Lint with oxlint             |
-| `pnpm format` | Format with oxfmt            |
+## 开发与校验
 
-[rspack.config.ts](rspack.config.ts) uses `https://api.deepseek.com` by default. Use `createConfig({ apiOrigin, devServer })` to customize the API origin and development server proxy.
+| 命令                | 用途                                              |
+| ------------------- | ------------------------------------------------- |
+| `pnpm test`         | 导入、存储、提示词、预设、多主题与协议适配测试    |
+| `pnpm type`         | TypeScript 类型检查                               |
+| `pnpm lint`         | 前端静态代码规范检查                              |
+| `pnpm build`        | 生产构建前端与 PWA 资源，输出 `dist/`             |
+| `pnpm build:client` | 编译 Windows 原生桌面客户端与手机 APP 小窗 `.exe` |
 
-Chat uses `deepseek-flash` by default through Anthropic-compatible Messages / Files APIs. Speech features use ASR / TTS endpoints. Requests include extensions for search, link reading, titles, and `latest_reminder`, so the configured service must support the corresponding capabilities. Supported attachment formats are determined by server-side validation.
+## 开源许可
 
-```text
-src/
-  app/                 Application layout, themes, and global styles
-  components/          Chat, settings, Markdown, and other UI components
-  i18n/                English and Chinese translations
-  services/
-    api/               API requests, SSE, and protocol types
-    chat/              Conversations, message branches, storage, and history import/export
-    markdown/          Markdown parsing, syntax highlighting, and diagrams
-    speech/            Audio recording and read-aloud playback
-  utils/               Shared utilities
-```
-
-## License
-
-[MIT](LICENSE). The build copies the license to `dist/LICENSE`; include it when distributing the app. Third-party dependencies are subject to their own licenses.
+代码基于 DeepSeek chat-demo，保留上游 [MIT 许可证](LICENSE) 和版权声明。酒馆逻辑、主题系统与客户端启动器为本项目原创实现，发布时请保留 LICENSE。

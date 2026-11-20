@@ -1,4 +1,9 @@
 import { create } from 'zustand'
+import { useAppearance } from '../appearance.js'
+import { compilePrompt, defaultPreset, type TavernContext } from '../tavern/core.js'
+import { currentContext, useConnection } from '../tavern/store.js'
+import { roleplayMessages } from '../tavern/request.js'
+import { MEMORY_LIMIT, withStoryMemory } from '../tavern/experience.js'
 import { createId } from '../../utils/id.js'
 import { ApiError, streamMessage } from '../api/client.js'
 import type { ChatModel, CreateMessageRequest } from '../api/types.js'
@@ -35,7 +40,7 @@ import {
 /** deepseek-flash 同时支持深度思考与图片输入 */
 const MODEL: ChatModel = 'deepseek-flash'
 /** 所有生成请求统一携带的助手身份说明 */
-const SYSTEM_PROMPT = '该助手为DeepSeek，由深度求索公司创造。'
+const SYSTEM_PROMPT = '你是一位乐于助人的 AI 助手。'
 /** 保留最近打开的详情；当前会话、生成中及尚未成功保存的会话不淘汰。 */
 const SESSION_CACHE_LIMIT = 5
 /** 安全审核固定开启，所有请求都走扩展模式 */
@@ -102,8 +107,18 @@ const getStreamController = (id: string) => {
   return Object.hasOwn(streams, id) ? streams[id] : undefined
 }
 
-const sameSummary = (a: SessionSummary, b: SessionSummary) =>
-  a.title === b.title && a.createdAt === b.createdAt && a.updatedAt === b.updatedAt
+const sameSummary = (a: Session | SessionSummary, b: Session | SessionSummary) => {
+  const left = toSessionSummary(a)
+  const right = toSessionSummary(b)
+  return (
+    left.title === right.title &&
+    left.createdAt === right.createdAt &&
+    left.updatedAt === right.updatedAt &&
+    left.pinned === right.pinned &&
+    left.characterId === right.characterId &&
+    left.characterName === right.characterName
+  )
+}
 
 const sessionAccess = new Map<string, number>()
 const unsavedSessions = new Set<string>()
@@ -184,15 +199,15 @@ const persist = (sessionId: string) => {
   if (session) {
     unsavedSessions.add(sessionId)
     if (deletingSessions.has(sessionId)) {
-      return
+      return Promise.resolve(false)
     }
     const epoch = historyEpoch
     const files = pendingFiles.get(sessionId)
-    void db
+    return db
       .saveSession(session, files)
       .then(() => {
         if (epoch !== historyEpoch || !getSession(sessionId)) {
-          return
+          return false
         }
         if (pendingFiles.get(sessionId) === files) {
           pendingFiles.delete(sessionId)
@@ -206,6 +221,7 @@ const persist = (sessionId: string) => {
           }))
           trimSessionCache()
         }
+        return true
       })
       .catch((error: unknown) => {
         db.reportStorageError('save session')(error)
@@ -214,8 +230,10 @@ const persist = (sessionId: string) => {
             sessionSaveErrors: { ...state.sessionSaveErrors, [sessionId]: true },
           }))
         }
+        return false
       })
   }
+  return Promise.resolve(false)
 }
 
 export const retrySaveSessions = () => {
@@ -260,7 +278,7 @@ const createReply = (): AssistantMessage => {
     id: createId(),
     role: 'assistant',
     createdAt: Date.now(),
-    model: MODEL,
+    model: useConnection.getState().model,
     thinking,
     search,
     prefix: true,
@@ -389,7 +407,11 @@ const waitForIdle = (sessionId?: string) =>
  * 替换历史对话：先写入暂存，成功后原子替换旧记录；写入为空即删除全部会话与附件。
  * 期间停止生成并禁止修改会话；失败时清除暂存，保留原有记录。
  */
-export const replaceHistory = async (write: () => Promise<void>): Promise<number> => {
+export const replaceHistory = async (
+  write: () => Promise<void>,
+  mode: 'append' | 'replace' = 'replace'
+): Promise<number> => {
+  const previousCount = get().sessions.length
   if (get().importingHistory) {
     throw new Error('History replacement is already in progress')
   }
@@ -404,11 +426,17 @@ export const replaceHistory = async (write: () => Promise<void>): Promise<number
     initTask = undefined
     sessionLoads.clear()
     await waitForIdle()
+    for (const id of unsavedSessions) {
+      const session = getSession(id)
+      if (session) {
+        await db.saveSession(session, pendingFiles.get(id))
+      }
+    }
     await db.clearStaging()
     let summaries: SessionSummary[]
     try {
       await write()
-      summaries = await db.commitStaging()
+      summaries = await db.commitStaging(mode)
     } catch (error) {
       await db.clearStaging().catch(db.reportStorageError('clear unfinished history replacement'))
       throw error
@@ -426,7 +454,7 @@ export const replaceHistory = async (write: () => Promise<void>): Promise<number
       sessionSaveErrors: {},
       activeId: null,
     })
-    return summaries.length
+    return mode === 'append' ? summaries.length - previousCount : summaries.length
   } finally {
     set({ importingHistory: false })
     retrySaveSessions()
@@ -445,6 +473,133 @@ export const newChat = () => {
     set({ activeId: null })
     trimSessionCache()
   }
+}
+
+/** 立即以指定角色配置开启一段带开场白的新对话并进入舞台（若已有未发言的同角色空初遇会话则智能复用） */
+export const startCharacterSession = (
+  context: TavernContext,
+  greetingOverride?: string
+): string | null => {
+  if (get().importingHistory || !get().ready) {
+    return null
+  }
+  const now = Date.now()
+  const snapshot = structuredClone(context)
+  const resolvedGreeting =
+    greetingOverride !== undefined ? greetingOverride : compilePrompt(snapshot, []).greeting
+
+  const existingUntouched = Object.values(get().sessionCache).find(
+    (s) => s.messages.length === 0 && s.tavern?.character.id === snapshot.character.id
+  )
+  if (existingUntouched) {
+    const refreshed: Session = {
+      ...existingUntouched,
+      updatedAt: now,
+      tavern: snapshot,
+      greeting: resolvedGreeting,
+    }
+    touchSession(refreshed.id)
+    set((state) => ({
+      sessions: [
+        toSessionSummary(refreshed),
+        ...state.sessions.filter((item) => item.id !== refreshed.id),
+      ],
+      sessionCache: { ...state.sessionCache, [refreshed.id]: refreshed },
+      activeId: refreshed.id,
+    }))
+    void persist(refreshed.id)
+    return refreshed.id
+  }
+
+  const session: Session = {
+    id: createId(),
+    title: `与 ${snapshot.character.name} 的初遇`,
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+    rootMessageId: null,
+    tavern: snapshot,
+    greeting: resolvedGreeting,
+  }
+  touchSession(session.id)
+  set((state) => ({
+    sessions: [toSessionSummary(session), ...state.sessions],
+    sessionCache: { ...state.sessionCache, [session.id]: session },
+    activeId: session.id,
+  }))
+  void persist(session.id)
+  trimSessionCache()
+  return session.id
+}
+
+/** 在尚未发送首条消息时，实时切换当前故事房间的平行开场白剧本 */
+export const switchSessionGreeting = (id: string, greeting: string): boolean => {
+  if (get().importingHistory || getStreamController(id)) {
+    return false
+  }
+  const target = getSession(id)
+  if (!target || target.messages.length > 0) {
+    return false
+  }
+  updateSession(id, (s) => ({
+    ...s,
+    greeting,
+    updatedAt: Date.now(),
+  }))
+  void persist(id)
+  return true
+}
+
+export const bindSessionCharacter = async (id: string, context: TavernContext | undefined) => {
+  if (get().importingHistory || getStreamController(id) || !getSession(id)) {
+    return false
+  }
+  updateSession(id, (s) => {
+    const snapshot = context ? structuredClone(context) : undefined
+    return {
+      ...s,
+      tavern: snapshot,
+      ...(s.messages.length === 0
+        ? { greeting: snapshot ? compilePrompt(snapshot, []).greeting : undefined }
+        : {}),
+      updatedAt: Date.now(),
+    }
+  })
+  return persist(id)
+}
+
+export const setSessionPinned = async (id: string, pinned: boolean) => {
+  const epoch = historyEpoch
+  if (get().importingHistory || deletingSessions.has(id)) {
+    return false
+  }
+  await ensureSessionLoaded(id)
+  if (
+    epoch !== historyEpoch ||
+    get().importingHistory ||
+    deletingSessions.has(id) ||
+    !getSession(id)
+  ) {
+    return false
+  }
+  updateSession(id, (session) => ({ ...session, pinned }))
+  return persist(id)
+}
+
+export const saveSessionMemory = async (id: string, memory: string) => {
+  if (memory.length > MEMORY_LIMIT) {
+    throw new Error(`故事记忆最多 ${MEMORY_LIMIT} 字符。`)
+  }
+  if (
+    get().importingHistory ||
+    deletingSessions.has(id) ||
+    getStreamController(id) ||
+    !getSession(id)
+  ) {
+    return false
+  }
+  updateSession(id, (session) => ({ ...session, memory, updatedAt: Date.now() }))
+  return persist(id)
 }
 
 export const selectSession = (id: string) => {
@@ -563,13 +718,19 @@ export const sendMessage = (targetSessionId: string | null) => {
     return false
   }
   if (sessionId === null) {
+    const tavern = currentContext()
     const session: Session = {
       id: createId(),
-      title: '',
+      title:
+        useConnection.getState().protocol !== 'deepseek'
+          ? text.trim().replace(/\s+/g, ' ').slice(0, 36)
+          : '',
       createdAt: now,
       updatedAt: now,
       messages: [],
       rootMessageId: null,
+      tavern,
+      greeting: tavern ? compilePrompt(tavern, []).greeting : undefined,
     }
     sessionId = session.id
     touchSession(session.id)
@@ -980,31 +1141,88 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
       let preparing = true
       let receivedContent = false
       try {
-        const prepared = await prepareFiles(sessionId, request, controller.signal)
+        const prepared =
+          useConnection.getState().protocol === 'deepseek'
+            ? await prepareFiles(sessionId, request, controller.signal)
+            : request
         preparing = false
         // 附件就绪后获取本轮信息；续写沿用原回答快照，重新生成的快照独立保存。
         const latestReminder = prepared.prefix
           ? prepared.prefix.latestReminder
           : createLatestReminder(useSettings.getState())
-        reply = { ...reply, latestReminder }
+        const session = getSession(sessionId)
+        const context = session?.tavern
+        const innerMonologueOn = Boolean(context && useAppearance.getState().innerMonologue)
+        const baseRoleplayPrompt =
+          prepared.prefix?.roleplayPrompt ??
+          (context
+            ? withStoryMemory(
+                {
+                  ...compilePrompt(
+                    context,
+                    [...prepared.history, prepared.question].map((m) => ({
+                      role: m.role,
+                      content:
+                        m.role === 'user'
+                          ? m.content
+                          : m.blocks
+                              .filter((b) => b.type === 'text')
+                              .map((b) => b.text)
+                              .join('\n'),
+                    }))
+                  ),
+                  greeting: session?.greeting ?? '',
+                },
+                session?.memory
+              )
+            : session?.memory?.trim()
+              ? withStoryMemory(
+                  { system: SYSTEM_PROMPT, greeting: '', postHistory: '' },
+                  session.memory
+                )
+              : undefined)
+        const roleplayPrompt =
+          baseRoleplayPrompt && innerMonologueOn && context && !prepared.prefix?.roleplayPrompt
+            ? {
+                ...baseRoleplayPrompt,
+                postHistory: [
+                  baseRoleplayPrompt.postHistory,
+                  `在正常回复的正文结束后，请空一行并使用 Markdown 引用块（以 > 开头）附带一小段角色此刻隐秘未说出口的真实内心独白与心动心率，格式示例：\n> 💭 **${context.character.name}的心声（心率 106 bpm）**：……（控制在 55 字以内，贴合人设展现反差、占有欲或暗藏的温柔偏爱）`,
+                ]
+                  .filter(Boolean)
+                  .join('\n'),
+              }
+            : baseRoleplayPrompt
+        reply = { ...reply, latestReminder, roleplayPrompt }
         updateReply(sessionId, reply)
         persist(sessionId)
-        const messages = toRequestMessages(
-          prepared.history,
-          prepared.question,
-          prepared.prefix,
-          initial.thinking ?? false,
-          latestReminder
-        )
+        const messages = roleplayPrompt
+          ? roleplayMessages(
+              prepared.history,
+              prepared.question,
+              prepared.prefix,
+              initial.thinking ?? false,
+              roleplayPrompt,
+              context?.preset.contextBudget ?? defaultPreset.contextBudget
+            )
+          : toRequestMessages(
+              prepared.history,
+              prepared.question,
+              prepared.prefix,
+              initial.thinking ?? false,
+              latestReminder
+            )
         const events = streamMessage(
           useSettings.getState().apiKey ?? '',
           {
             model: initial.model ?? MODEL,
-            system: SYSTEM_PROMPT,
+            system: roleplayPrompt?.system ?? SYSTEM_PROMPT,
             messages,
+            max_tokens: context?.preset.maxTokens ?? defaultPreset.maxTokens,
+            temperature: context?.preset.temperature ?? defaultPreset.temperature,
             thinking: { type: initial.thinking ? 'enabled' : 'disabled' },
             safety_check: SAFETY_CHECK,
-            tools: serverTools(initial.search ?? false),
+            tools: context ? [] : serverTools(initial.search ?? false),
             ...(titleRequests.has(controller) ? { title: { enabled: true } } : {}),
           },
           controller.signal

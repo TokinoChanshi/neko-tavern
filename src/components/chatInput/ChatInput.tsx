@@ -1,5 +1,9 @@
 import clsx from 'clsx'
-import { memo, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { DIRECTOR_INSPIRATIONS } from '../../services/tavern/presets.js'
+import { useConnection, useTavern } from '../../services/tavern/store.js'
+import { toggleInnerMonologue, useAppearance } from '../../services/appearance.js'
+import { useTavernText } from '../tavern/text.js'
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   IconGlobeLanguageOutline14,
   IconPaperclipOutline16,
@@ -34,14 +38,28 @@ import { Spectrum } from './Spectrum.js'
 import { useTranslate } from '../../i18n/index.js'
 import styles from './ChatInput.module.css'
 
-/** 输入框：自适应高度的文本框 + 文件 + 深度思考与智能搜索开关 + 语音输入 + 发送 / 停止 */
+/** 输入框：自适应高度文本框 + 陪伴模式动作/台词快捷插入 + 深度思考/搜索开关 + 语音 + 发送 */
 export const ChatInput = memo(function ChatInput({ sessionId }: { sessionId: string | null }) {
-  // 切换目标时释放录音、转写和 DOM 状态；文字与附件由草稿服务保留。
   return <Input key={sessionId === null ? 'new' : `session:${sessionId}`} sessionId={sessionId} />
 })
 
 const Input = ({ sessionId }: { sessionId: string | null }) => {
   const t = useTranslate()
+  const tt = useTavernText()
+  const uiMode = useAppearance((s) => s.uiMode)
+  const innerMonologue = useAppearance((s) => s.innerMonologue)
+  const [inspireOpen, setInspireOpen] = useState(false)
+  const deepseek = useConnection((s) => s.protocol === 'deepseek')
+  const tavernReady = useTavern((s) => s.ready)
+  const selectedCharacterName = useTavern((s) => {
+    const id = s.library.selectedId
+    return id ? s.library.characters.find((c) => c.id === id)?.name : undefined
+  })
+  const boundCharacterName = useChatStore((s) =>
+    sessionId ? s.sessionCache[sessionId]?.tavern?.character.name : undefined
+  )
+  const activeCharacterName = sessionId ? boundCharacterName : selectedCharacterName
+  const roleplay = Boolean(activeCharacterName)
   const draft = useDrafts((state) => state.drafts.get(sessionId) ?? EMPTY_DRAFT)
   const { text, attachments } = draft
   const setText = (value: string) => setDraftText(sessionId, value)
@@ -62,19 +80,38 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     if (!toggles) {
       return
     }
-
     const updateLabels = () => {
       toggles.classList.remove(styles.collapsedToggles)
       toggles.classList.toggle(styles.collapsedToggles, toggles.scrollWidth > toggles.clientWidth)
     }
-
     updateLabels()
     const observer = new ResizeObserver(updateLabels)
     observer.observe(toggles)
     return () => observer.disconnect()
-  }, [t])
+  }, [t, uiMode, roleplay])
+
+  /** 在光标位置包裹或插入符号对（例如 *动作* 或 「台词」） */
+  const insertPair = (open: string, close: string) => {
+    const textarea = textareaRef.current
+    const current = getDraft(sessionId).text
+    const start = textarea?.selectionStart ?? current.length
+    const end = textarea?.selectionEnd ?? current.length
+    const selected = current.slice(start, end)
+    const next = current.slice(0, start) + open + selected + close + current.slice(end)
+    setText(next)
+    requestAnimationFrame(() => {
+      textarea?.focus({ preventScroll: true })
+      const cursor = selected
+        ? start + open.length + selected.length + close.length
+        : start + open.length
+      textarea?.setSelectionRange(cursor, cursor)
+    })
+  }
 
   const acceptFiles = (files: File[]) => {
+    if (!deepseek) {
+      return
+    }
     if (files.length === 0 || useChatStore.getState().importingHistory || !ensureApiKey()) {
       return
     }
@@ -101,7 +138,6 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   )
   const dragging = useFileDrop(acceptFiles)
 
-  /** 转写结果插入到光标处，并把光标移到插入内容之后 */
   const voice = useVoiceInput((transcript) => {
     const textarea = textareaRef.current
     const current = getDraft(sessionId).text
@@ -114,7 +150,6 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     })
   })
 
-  // 欢迎页导入后会话 ID 不变，不能依赖卸载取消语音；订阅开始事件也覆盖快速完成的导入。
   const cancelVoice = voice.cancel
   useEffect(
     () =>
@@ -126,21 +161,19 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     [cancelVoice]
   )
 
-  // 移动端录音时用频谱替代输入框内容
   const recording = voice.status === 'recording'
-
-  // 排队、上传中或上传失败的附件都留在输入框，全部上传成功后才能发送
-  const canSend = !importingHistory && !streaming && voice.status === 'idle' && draftReady
+  const canSend =
+    tavernReady && !importingHistory && !streaming && voice.status === 'idle' && draftReady
 
   const send = () => {
     if (
       useChatStore.getState().importingHistory ||
+      !tavernReady ||
       voice.status !== 'idle' ||
       !prepareDraftMessage(getDraft(sessionId), useUploads.getState().tasks)
     ) {
       return
     }
-    // 文本与上传完成态由提交动作读取最新快照，不使用上一次渲染的草稿。
     if (!ensureApiKey() || !sendMessage(sessionId)) {
       return
     }
@@ -152,6 +185,13 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     }
   }
 
+  const placeholder =
+    uiMode === 'ds'
+      ? '给 DeepSeek 发送消息'
+      : activeCharacterName
+        ? tt('roleplayPlaceholder', { name: activeCharacterName })
+        : t('chatInputPlaceholderChat')
+
   return (
     <div
       className={clsx(styles.wrapper, sessionId === null ? styles.home : styles.session)}
@@ -162,19 +202,44 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
       }}
     >
       <DraftAttachments items={attachments} onRetry={retryFile} onRemove={removeFile} />
+      {inspireOpen && roleplay && uiMode !== 'ds' ? (
+        <div className={styles.inspireDrawer} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.inspireHead}>
+            <span>✦ 剧情推进 · 导演灵感小纸条（点击填入输入框，可自由微调）</span>
+            <button type="button" onClick={() => setInspireOpen(false)}>
+              收起
+            </button>
+          </div>
+          <div className={styles.inspireGrid}>
+            {DIRECTOR_INSPIRATIONS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={styles.inspireChip}
+                onClick={() => {
+                  setText(item.text)
+                  setInspireOpen(false)
+                  requestAnimationFrame(() => textareaRef.current?.focus({ preventScroll: true }))
+                }}
+              >
+                <em>{item.badge}</em>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className={styles.textareaWrapper}>
         <textarea
           ref={textareaRef}
           className={clsx(styles.textarea, recording && isMobile && styles.textareaHidden)}
-          placeholder={t('chatInputPlaceholderChat')}
+          placeholder={placeholder}
           rows={2}
-          // 移动端不自动聚焦，避免一打开就弹出键盘
           autoFocus={!isMobile}
           disabled={importingHistory}
           value={text}
           onChange={(event) => setText(event.target.value)}
           onMouseDown={(event) => {
-            // 首次点击时手动聚焦，避免 Safari 把整个页面滚到输入框位置。
             if (isMobile && event.button === 0 && document.activeElement !== event.currentTarget) {
               event.preventDefault()
               event.currentTarget.focus({ preventScroll: true })
@@ -200,55 +265,104 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
         </div>
       </div>
       <div className={styles.functionRow}>
-        {/* 深度思考 / 智能搜索开关，tooltip 在按钮上方 */}
         <div ref={togglesRef} className={styles.toggles}>
-          <Tooltip content={t('deactivatedThinkTooltip')}>
-            <button
-              type="button"
-              className={clsx(styles.toggle, thinking && styles.selected)}
-              aria-label={t('thinkingSwitch')}
-              aria-pressed={thinking}
-              onClick={() => setThinking(!thinking)}
-            >
-              <IconThinkOutline14 />
-              <span className={styles.toggleLabel}>{t('thinkingSwitch')}</span>
-            </button>
-          </Tooltip>
-          <Tooltip content={t('deactivatedSearchTooltip')}>
-            <button
-              type="button"
-              className={clsx(styles.toggle, search && styles.selected)}
-              aria-label={t('search')}
-              aria-pressed={search}
-              onClick={() => setSearch(!search)}
-            >
-              <IconGlobeLanguageOutline14 />
-              <span className={styles.toggleLabel}>{t('search')}</span>
-            </button>
-          </Tooltip>
+          {deepseek ? (
+            <Tooltip content={t('deactivatedThinkTooltip')}>
+              <button
+                type="button"
+                className={clsx(styles.toggle, thinking && styles.selected)}
+                aria-label={t('thinkingSwitch')}
+                aria-pressed={thinking}
+                onClick={() => setThinking(!thinking)}
+              >
+                <IconThinkOutline14 />
+                <span className={styles.toggleLabel}>
+                  {uiMode === 'ds' ? '深度思考' : t('thinkingSwitch')}
+                </span>
+              </button>
+            </Tooltip>
+          ) : null}
+          {deepseek && !roleplay ? (
+            <Tooltip content={t('deactivatedSearchTooltip')}>
+              <button
+                type="button"
+                className={clsx(styles.toggle, search && styles.selected)}
+                aria-label={t('search')}
+                aria-pressed={search}
+                onClick={() => setSearch(!search)}
+              >
+                <IconGlobeLanguageOutline14 />
+                <span className={styles.toggleLabel}>
+                  {uiMode === 'ds' ? '联网搜索' : t('search')}
+                </span>
+              </button>
+            </Tooltip>
+          ) : null}
+          {uiMode !== 'ds' && roleplay ? (
+            <>
+              <button
+                type="button"
+                className={styles.rpHelper}
+                title="插入 *动作与神态描写*"
+                onClick={() => insertPair('*', '*')}
+              >
+                <span>*动作*</span>
+              </button>
+              <button
+                type="button"
+                className={styles.rpHelper}
+                title="插入「对话台词」"
+                onClick={() => insertPair('「', '」')}
+              >
+                <span>「台词」</span>
+              </button>
+              <button
+                type="button"
+                className={clsx(styles.rpHelper, inspireOpen && styles.rpHelperActive)}
+                title="展开剧情推进与互动灵感小纸条"
+                onClick={() => setInspireOpen((v) => !v)}
+              >
+                <span>✦ 灵感</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed={innerMonologue}
+                className={clsx(styles.rpHelper, innerMonologue && styles.rpHelperActive)}
+                title="开启后，角色每轮回复末尾将附带未说出口的真实心声与心率"
+                onClick={toggleInnerMonologue}
+              >
+                <span>{innerMonologue ? '💭 读心开' : '💭 读心'}</span>
+              </button>
+            </>
+          ) : null}
         </div>
         <div className={styles.right}>
-          <VoiceButton
-            status={voice.status}
-            disabled={!voice.available}
-            seconds={voice.seconds}
-            onClick={() => {
-              if (
-                voice.status !== 'idle' ||
-                (!useChatStore.getState().importingHistory && ensureApiKey())
-              ) {
-                void voice.toggle()
-              }
-            }}
-          />
-          <IconButton
-            size="m"
-            tone="primary"
-            icon={<IconPaperclipOutline16 />}
-            tooltip={t('uploadFile')}
-            disabled={importingHistory}
-            onClick={() => ensureApiKey() && fileInputRef.current?.click()}
-          />
+          {deepseek ? (
+            <VoiceButton
+              status={voice.status}
+              disabled={!voice.available}
+              seconds={voice.seconds}
+              onClick={() => {
+                if (
+                  voice.status !== 'idle' ||
+                  (!useChatStore.getState().importingHistory && ensureApiKey())
+                ) {
+                  void voice.toggle()
+                }
+              }}
+            />
+          ) : null}
+          {deepseek || !roleplay ? (
+            <IconButton
+              size="m"
+              tone="primary"
+              icon={<IconPaperclipOutline16 />}
+              tooltip={deepseek ? t('uploadFile') : tt('attachNotice')}
+              disabled={importingHistory || !deepseek}
+              aria-label={deepseek ? t('uploadFile') : tt('attachNotice')}
+              onClick={() => ensureApiKey() && fileInputRef.current?.click()}
+            />
+          ) : null}
           <input
             ref={fileInputRef}
             type="file"

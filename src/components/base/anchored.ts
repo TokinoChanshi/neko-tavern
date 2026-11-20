@@ -19,9 +19,11 @@ export type AnchoredPosition = {
   left?: number
   right?: number
   maxHeight?: number
+  width?: number
 }
 
 export type AnchoredOptions = {
+  matchAnchorWidth?: boolean
   /** 优先出现的一侧，放不下时翻到另一侧 */
   side?: Side
   /** 相对触发元素的水平对齐方式 */
@@ -57,7 +59,7 @@ const alignLeft = (anchor: DOMRect, width: number, align: Align, alignOffset: nu
     return clampLeft(anchor.left + anchor.width / 2 - width / 2 + alignOffset, width)
   }
   if (align === 'end') {
-    return Math.max(VIEWPORT_PADDING, anchor.right - width + alignOffset)
+    return clampLeft(anchor.right - width + alignOffset, width)
   }
   return clampLeft(anchor.left + alignOffset, width)
 }
@@ -93,6 +95,7 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
     minSpace = 160,
     measureFirstChild = false,
     measureKey,
+    matchAnchorWidth = false,
   }: AnchoredOptions = {}
 ) => {
   const anchorRef = useRef<T | null>(null) as MutableRefObject<T | null>
@@ -106,7 +109,8 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
       previous.top === next.top &&
       previous.left === next.left &&
       previous.right === next.right &&
-      previous.maxHeight === next.maxHeight
+      previous.maxHeight === next.maxHeight &&
+      previous.width === next.width
         ? previous
         : next
     )
@@ -129,6 +133,12 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
       return
     }
     const rect = anchor.getBoundingClientRect()
+    const width = matchAnchorWidth
+      ? Math.min(rect.width, window.innerWidth - VIEWPORT_PADDING * 2)
+      : undefined
+    if (width !== undefined) {
+      floating.style.width = `${width}px`
+    }
     const spaceAbove = rect.top - offset - VIEWPORT_PADDING
     const spaceBelow = window.innerHeight - rect.bottom - offset - VIEWPORT_PADDING
 
@@ -142,19 +152,32 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
       return
     }
 
-    const resolved = resolveSide(spaceAbove, spaceBelow, side, minSpace)
+    const needed = Math.min(minSpace, floating.scrollHeight + 2)
+    const resolved = resolveSide(spaceAbove, spaceBelow, side, needed)
     const available = Math.max(0, resolved === 'top' ? spaceAbove : spaceBelow)
     // 内容比可用空间小时按内容收口，避免浮层留出多余空白
-    const height = Math.max(40, Math.min(maxHeight, available, floating.scrollHeight + 2))
+    const height = Math.min(maxHeight, available, floating.scrollHeight + 2)
     applyPosition({
       top:
         resolved === 'top'
           ? Math.max(VIEWPORT_PADDING, rect.top - offset - height)
           : rect.bottom + offset,
-      right: Math.max(VIEWPORT_PADDING, window.innerWidth - rect.right),
+      left: alignLeft(rect, floating.getBoundingClientRect().width, align, alignOffset),
       maxHeight: height,
+      width,
     })
-  }, [align, alignOffset, applyPosition, floatingRef, getAnchor, maxHeight, minSpace, offset, side])
+  }, [
+    align,
+    alignOffset,
+    applyPosition,
+    floatingRef,
+    getAnchor,
+    maxHeight,
+    minSpace,
+    offset,
+    side,
+    matchAnchorWidth,
+  ])
 
   // 打开时与内容变化时同步测量，必须在绘制前完成
   useLayoutEffect(() => {

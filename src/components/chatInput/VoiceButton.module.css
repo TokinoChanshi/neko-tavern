@@ -21,11 +21,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: 10px;
   background-color: transparent;
   color: var(--dsw-alias-label-primary);
   cursor: pointer;
@@ -43,7 +43,8 @@
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px var(--dsw-alias-button-primary-fill);
+    outline: 2px solid var(--dsw-alias-brand-text);
+    outline-offset: 2px;
   }
 }
 
@@ -169,5 +170,12 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .button {
+    width: 40px;
+    height: 40px;
   }
 }

@@ -69,7 +69,11 @@ const readErrorResponse = async (
 export const request = async (url: string, init: RequestInit): Promise<Response> => {
   let response: Response
   try {
-    response = await fetch(url, init)
+    const headers = new Headers(init.headers)
+    headers.set('X-Mengnan-Client', '1')
+    headers.delete('Authorization')
+    headers.delete('x-api-key')
+    response = await fetch(url, { ...init, headers })
   } catch (error) {
     if (init.signal?.aborted) {
       throw error
@@ -146,7 +150,7 @@ export async function* streamMessage(
   body: CreateMessageRequest,
   signal: AbortSignal
 ): AsyncGenerator<MessageStreamEvent> {
-  const response = await request(`${ANTHROPIC_BASE_URL}/messages`, {
+  const response = await request('/api/chat', {
     method: 'POST',
     headers: {
       ...anthropicHeaders(apiKey, hasFile(body)),

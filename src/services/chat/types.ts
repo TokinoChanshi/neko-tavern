@@ -1,4 +1,5 @@
 import type { TranslationMessage } from '../../i18n/index.js'
+import type { TavernContext } from '../tavern/core.js'
 import type { ApiErrorKind } from '../api/client.js'
 import type {
   ChatModel,
@@ -83,6 +84,7 @@ export type AssistantMessage = MessageBranch & {
   search?: boolean
   /** 本轮请求的系统信息快照；各回答版本独立保存，续写沿用。历史消息中缺省的快照保持为空。 */
   latestReminder?: string
+  roleplayPrompt?: { system: string; greeting: string; postHistory: string }
   /** 是否允许作为续写前缀；仍需满足回复状态与内容限制。 */
   prefix: boolean
   status: ReplyStatus
@@ -106,6 +108,10 @@ export type AssistantMessage = MessageBranch & {
 export type Message = UserMessage | AssistantMessage
 
 export type Session = {
+  pinned?: boolean
+  memory?: string
+  tavern?: TavernContext
+  greeting?: string
   id: string
   title: string
   createdAt: number
@@ -117,12 +123,29 @@ export type Session = {
 }
 
 /** 会话列表元数据；消息只在打开会话时加载。 */
-export type SessionSummary = Pick<Session, 'id' | 'title' | 'createdAt' | 'updatedAt'>
+export type SessionSummary = Pick<
+  Session,
+  'id' | 'title' | 'createdAt' | 'updatedAt' | 'pinned'
+> & {
+  characterId?: string
+  characterName?: string
+  characterAvatar?: string
+}
 
 /** 显式提取字段，避免将完整会话的消息带进列表。 */
-export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
-  id: session.id,
-  title: session.title,
-  createdAt: session.createdAt,
-  updatedAt: session.updatedAt,
-})
+export const toSessionSummary = (session: Session | SessionSummary): SessionSummary => {
+  const rawAvatar =
+    'messages' in session ? session.tavern?.character.avatar : session.characterAvatar
+  return {
+    id: session.id,
+    title: session.title,
+    createdAt: session.createdAt,
+    updatedAt: session.updatedAt,
+    pinned: session.pinned ?? false,
+    characterId: 'messages' in session ? session.tavern?.character.id : session.characterId,
+    characterName: 'messages' in session ? session.tavern?.character.name : session.characterName,
+    ...(typeof rawAvatar === 'string' && rawAvatar.length > 0 && rawAvatar.length <= 512
+      ? { characterAvatar: rawAvatar }
+      : {}),
+  }
+}

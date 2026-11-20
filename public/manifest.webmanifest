@@ -1,0 +1,46 @@
+{
+  "name": "猫猫酒馆 · 专属角色互动小馆",
+  "short_name": "猫猫酒馆",
+  "description": "私密本地女性向沉浸陪伴酒馆 · 支持宽屏酒馆、手机 APP 模式与 DeepSeek 原版多主题",
+  "lang": "zh-CN",
+  "start_url": "./?mode=mobile",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fcf8f9",
+  "theme_color": "#fcf8f9",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "手机陪伴 APP",
+      "short_name": "手机APP",
+      "url": "./?mode=mobile",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "宽屏沉浸酒馆",
+      "short_name": "宽屏酒馆",
+      "url": "./?mode=companion",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "DeepSeek 经典极简",
+      "short_name": "DS经典",
+      "url": "./?mode=ds",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

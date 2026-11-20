@@ -1,7 +1,8 @@
 import { useTranslate } from '../../i18n/index.js'
 import clsx from 'clsx'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useIsMobile } from '../../app/viewport.js'
+import { useAppearance } from '../../services/appearance.js'
 import { IconEditOutline16 } from '../base/icons.js'
 import { editMessage, retryUpload } from '../../services/chat/store.js'
 import { stopReadAloud } from '../../services/speech/readAloud.js'
@@ -18,9 +19,44 @@ import { MessageFile } from './MessageFile.js'
 import { CopyButton } from './CopyButton.js'
 import styles from './UserMessage.module.css'
 
+const RP_TOKEN_RE = /(\*[^*\n]{1,600}\*|「[^」\n]{1,600}」|“[^”\n]{1,600}”|（导演提示：[^）\n]+）)/g
+
+const renderRoleplayUserContent = (content: string): ReactNode =>
+  content.split(RP_TOKEN_RE).map((part, idx) => {
+    if (!part) {
+      return null
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      return (
+        <em key={idx} className={styles.rpAction}>
+          {part.slice(1, -1)}
+        </em>
+      )
+    }
+    if (
+      (part.startsWith('「') && part.endsWith('」')) ||
+      (part.startsWith('“') && part.endsWith('”'))
+    ) {
+      return (
+        <span key={idx} className="mn-dialogue-quote">
+          {part}
+        </span>
+      )
+    }
+    if (part.startsWith('（导演提示：')) {
+      return (
+        <span key={idx} className={styles.rpDirector}>
+          {part}
+        </span>
+      )
+    }
+    return part
+  })
+
 export const UserMessage = memo(function UserMessage({
   sessionId,
   message,
+  roleplay = false,
   retryUploadId,
   isFirst,
   isLast,
@@ -30,6 +66,7 @@ export const UserMessage = memo(function UserMessage({
 }: {
   sessionId: string
   message: UserMessageType
+  roleplay?: boolean
   /** 回答因补传附件失败可重试时为该回答 id */
   retryUploadId: string | null
   isFirst: boolean
@@ -39,6 +76,7 @@ export const UserMessage = memo(function UserMessage({
   onSelectVersion: SelectMessageVersion
 }) {
   const t = useTranslate()
+  const uiMode = useAppearance((s) => s.uiMode)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.content)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -112,7 +150,13 @@ export const UserMessage = memo(function UserMessage({
         </div>
       ) : (
         <>
-          {message.content ? <div className={styles.bubble}>{message.content}</div> : null}
+          {message.content ? (
+            <div className={styles.bubble}>
+              {roleplay && uiMode !== 'ds'
+                ? renderRoleplayUserContent(message.content)
+                : message.content}
+            </div>
+          ) : null}
           <div className={styles.bottom}>
             <div className={clsx(styles.actions, isLast && styles.alwaysShow)}>
               {message.content ? <CopyButton text={message.content} /> : null}

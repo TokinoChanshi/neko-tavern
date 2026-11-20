@@ -1,5 +1,6 @@
 .message {
   position: relative;
+  margin-bottom: 18px;
 
   &:hover .actions,
   &:focus-within .actions {
@@ -7,42 +8,119 @@
   }
 
   :global(.ds-assistant-message-main-content) {
-    padding-bottom: 6px;
+    padding-bottom: 4px;
   }
+}
+
+/* 商业陪伴对话：左侧圆润头像 + 右侧姓名与精致气泡 */
+:global(body[data-mn-ui='companion']) .roleplayRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.avatarCol {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.avatarCol :global(.tavern-portrait) {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+:global(body[data-ds-dark-theme]) .avatarCol :global(.tavern-portrait) {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.bodyCol {
+  flex: 1;
+  min-width: 0;
+}
+
+.characterName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dsw-alias-brand-text);
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+/* DS 经典模式下隐藏额外头像与气泡外框，100% 还原原版流式排版 */
+:global(body[data-mn-ui='ds']) .avatarCol,
+:global(body[data-mn-ui='ds']) .characterName {
+  display: none;
+}
+
+/* 陪伴模式 - 心动气泡 (bubbles) */
+:global(body[data-mn-ui='companion'][data-mn-layout='bubbles']) .speechBubble {
+  padding: 14px 18px 10px;
+  border-radius: 4px 20px 20px 20px;
+  background: var(--mn-glass-bg, var(--dsw-alias-bg-layer-2));
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--dsw-alias-border-l2);
+  box-shadow: var(--mn-card-shadow);
+}
+
+:global(body[data-mn-ui='companion'][data-mn-layout='bubbles'][data-mn-material='soft'])
+  .speechBubble {
+  background: var(--dsw-alias-bg-layer-2);
+  backdrop-filter: none;
+}
+
+:global(body[data-mn-ui='companion'][data-mn-layout='bubbles'][data-mn-material='minimal'])
+  .speechBubble {
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-color: var(--dsw-alias-border-l1);
+}
+
+/* 陪伴模式 - 轻小说剧场 (novel) */
+:global(body[data-mn-ui='companion'][data-mn-layout='novel']) .speechBubble {
+  padding: 20px 24px 14px;
+  border-radius: 18px;
+  background: var(--mn-scene);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--dsw-alias-border-l2);
+  box-shadow: var(--mn-card-shadow);
 }
 
 .waiting {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
+  height: 32px;
 }
 
 .waitingDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--dsw-alias-label-dimmed);
-  animation: fading 0.9s linear infinite;
+  background-color: var(--dsw-alias-brand-primary);
+  animation: fading 1s ease-in-out infinite;
 
   &:nth-child(2) {
-    animation-delay: 0.1s;
+    animation-delay: 0.15s;
   }
 
   &:nth-child(3) {
-    animation-delay: 0.2s;
+    animation-delay: 0.3s;
   }
 }
 
 @keyframes fading {
   0%,
   100% {
-    opacity: 0.3;
+    opacity: 0.25;
+    transform: translateY(0);
   }
-
-  33%,
-  66% {
-    opacity: 1;
+  50% {
+    opacity: 0.95;
+    transform: translateY(-2px);
   }
 }
 
@@ -83,13 +161,13 @@
 
 .bottom {
   position: relative;
-  left: -6px;
+  left: -4px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  padding-top: 12px;
-  padding-bottom: 10px;
+  padding-top: 6px;
+  padding-bottom: 4px;
 }
 
 .actions {
@@ -112,28 +190,43 @@
   display: flex;
   align-items: center;
   width: fit-content;
-  margin-top: 16px;
+  margin-top: 14px;
   padding: 4px 10px 4px 4px;
-  border-radius: 100px;
+  border-radius: var(--mn-control-radius);
   border: 1px solid var(--dsw-alias-border-l2);
   background-color: var(--dsw-alias-bg-base);
   color: var(--dsw-alias-label-primary);
   font: var(--dsw-font-markdown-small);
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.3s;
+}
 
-  > span:first-child {
-    margin-left: 0;
+:global(body[data-mn-shell='mobile']) .roleplayRow {
+  gap: 9px;
+}
+
+:global(body[data-mn-shell='mobile']) .avatarCol :global(.tavern-portrait) {
+  width: 34px;
+  height: 34px;
+}
+
+:global(body[data-mn-shell='mobile'][data-mn-layout='bubbles']) .speechBubble,
+:global(body[data-mn-shell='mobile'][data-mn-layout='novel']) .speechBubble {
+  padding: 12px 15px 9px;
+  border-radius: 4px 18px 18px 18px;
+}
+
+@media (max-width: 767px) {
+  :global(body[data-mn-ui='companion']) .roleplayRow {
+    gap: 9px;
   }
-
-  > span:last-child {
-    margin-left: 6px;
+  .avatarCol :global(.tavern-portrait) {
+    width: 34px;
+    height: 34px;
   }
-
-  &:hover,
-  &.summaryActive {
-    background-color: var(--dsw-alias-interactive-bg-hover);
-    --search-row-site-logo-color: var(--dsw-alias-interactive-bg-hover);
+  :global(body[data-mn-ui='companion'][data-mn-layout='bubbles']) .speechBubble,
+  :global(body[data-mn-ui='companion'][data-mn-layout='novel']) .speechBubble {
+    padding: 12px 14px 8px;
+    border-radius: 4px 18px 18px 18px;
   }
 }

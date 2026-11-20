@@ -31,20 +31,60 @@ export const Modal = ({
 }) => {
   const t = useTranslate()
   const titleId = useId()
+  const contentRef = useRef<HTMLDivElement>(null)
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
   useEffect(() => {
     const token = {}
+    const previousFocus = document.activeElement
     openModals.push(token)
+    const focusable = () =>
+      [
+        ...(contentRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex="0"]'
+        ) ?? []),
+      ].filter((element) => element.getClientRects().length > 0)
+    if (!contentRef.current?.contains(document.activeElement)) {
+      ;(focusable()[0] ?? contentRef.current)?.focus()
+    }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && openModals.at(-1) === token) {
+      if (openModals.at(-1) !== token) {
+        return
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
         onCloseRef.current()
+      } else if (event.key === 'Tab') {
+        const elements = focusable()
+        const first = elements[0]
+        const last = elements.at(-1)
+        if (!first) {
+          event.preventDefault()
+          contentRef.current?.focus()
+        } else if (
+          event.shiftKey &&
+          (document.activeElement === first ||
+            !contentRef.current?.contains(document.activeElement))
+        ) {
+          event.preventDefault()
+          last?.focus()
+        } else if (
+          !event.shiftKey &&
+          (document.activeElement === last || !contentRef.current?.contains(document.activeElement))
+        ) {
+          event.preventDefault()
+          first.focus()
+        }
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => {
       openModals.splice(openModals.indexOf(token), 1)
       document.removeEventListener('keydown', onKeyDown)
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        previousFocus.focus()
+      }
     }
   }, [])
 
@@ -54,6 +94,8 @@ export const Modal = ({
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <div
+        ref={contentRef}
+        tabIndex={-1}
         className={clsx(styles.content, className)}
         role="dialog"
         aria-modal="true"

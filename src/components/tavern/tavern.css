@@ -1,0 +1,1125 @@
+.tavern-dialog {
+  width: min(1040px, 95vw);
+  max-height: 92dvh;
+}
+.tavern-main {
+  display: flex;
+  padding: 0 !important;
+  height: min(66dvh, 660px);
+  min-height: 0;
+  overflow: hidden !important;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 18px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+.tavern-rail {
+  width: 248px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding: 16px 14px;
+  border-right: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-specific-sidebar-fill);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+.tavern-rail-top-actions > button {
+  flex: 1;
+}
+.tavern-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  border-radius: 12px;
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 7px 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.tavern-search input {
+  background: none;
+  border: 0;
+  min-width: 0;
+  width: 100%;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  outline: none;
+}
+.tavern-search:focus-within {
+  border-color: var(--dsw-alias-brand-primary);
+  box-shadow: 0 0 0 2px var(--mn-focus-ring);
+}
+.tavern-filter-tabs {
+  display: flex;
+  gap: 6px;
+}
+.tavern-filter-tabs button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  color: var(--dsw-alias-label-secondary);
+  padding: 6px;
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.tavern-filter-tabs button[aria-pressed='true'] {
+  border-color: var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-brand-text);
+  font-weight: 500;
+  background: var(--dsw-alias-bg-layer-2);
+}
+.tavern-filter-tabs span {
+  opacity: 0.7;
+}
+.tavern-character-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.tavern-character {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  margin-bottom: 5px;
+  min-width: 0;
+  font: inherit;
+  font-size: 13px;
+  transition:
+    background-color 140ms,
+    border-color 140ms;
+}
+.tavern-character:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.tavern-character.is-selected {
+  background: var(--mn-selection);
+  border-color: var(--dsw-alias-button-ghost-active-border);
+  color: var(--dsw-alias-brand-text);
+  font-weight: 500;
+}
+.tavern-character-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tavern-character > svg {
+  color: var(--dsw-alias-brand-primary);
+  flex-shrink: 0;
+}
+.tavern-starter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+.tavern-starter-btn:hover:not(:disabled) {
+  background: var(--mn-selection);
+  border-color: var(--dsw-alias-brand-primary);
+}
+.tavern-portrait {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-family: var(--mn-serif);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.tavern-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 16%;
+  display: block;
+}
+.tavern-portrait-xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+.tavern-portrait-s {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+.tavern-portrait-m {
+  width: 36px;
+  height: 42px;
+  border-radius: 11px;
+  font-size: 17px;
+}
+.tavern-portrait-l {
+  width: 60px;
+  height: 72px;
+  border-radius: 14px;
+  font-size: 26px;
+}
+.tavern-portrait-hero {
+  width: 76px;
+  height: 90px;
+  border-radius: 16px;
+  font-size: 32px;
+}
+.tavern-portrait-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  font-size: 42px;
+}
+.mn-illustrated-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.mn-portrait-monogram {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+.tavern-tone-0 {
+  background: linear-gradient(145deg, #f8e3eb, #f3d5e0);
+  color: #9e506a;
+}
+.tavern-tone-1 {
+  background: linear-gradient(145deg, #eae6f7, #ddd8f2);
+  color: #625699;
+}
+.tavern-tone-2 {
+  background: linear-gradient(145deg, #f5e8db, #eddac6);
+  color: #8f5f40;
+}
+.tavern-tone-3 {
+  background: linear-gradient(145deg, #e2efe8, #d2e6dc);
+  color: #46735f;
+}
+[data-ds-dark-theme] .tavern-tone-0 {
+  background: linear-gradient(145deg, #472e39, #38232c);
+  color: #edb6c8;
+}
+[data-ds-dark-theme] .tavern-tone-1 {
+  background: linear-gradient(145deg, #35324d, #2a273e);
+  color: #c7c0ed;
+}
+[data-ds-dark-theme] .tavern-tone-2 {
+  background: linear-gradient(145deg, #45362b, #362920);
+  color: #e6bfa1;
+}
+[data-ds-dark-theme] .tavern-tone-3 {
+  background: linear-gradient(145deg, #2b3f37, #21322b);
+  color: #add4c2;
+}
+.tavern-editor {
+  flex: 1;
+  min-width: 0;
+  padding: 0 28px 28px;
+  overflow-y: auto;
+}
+.tavern-tabs {
+  display: flex;
+  gap: 24px;
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--dsw-alias-bg-layer-2);
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  margin-bottom: 20px;
+}
+.tavern-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 2px;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+.tavern-tabs button[aria-selected='true'] {
+  color: var(--dsw-alias-brand-text);
+  box-shadow: 0 2px currentColor;
+}
+.tavern-tab-badge {
+  font-style: normal;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--mn-selection);
+  color: var(--dsw-alias-brand-text);
+}
+.tavern-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tavern-fields h3 {
+  font-size: 15px;
+  margin: 0;
+}
+.tavern-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-secondary);
+}
+.tavern-field input,
+.tavern-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--mn-control-height);
+  padding: 10px 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: var(--mn-control-radius);
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.65;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms;
+}
+.tavern-field textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+.tavern-field :is(input, textarea):focus-visible {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary);
+  box-shadow: 0 0 0 3px var(--mn-focus-ring);
+}
+.tavern-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-control-gap);
+  flex-wrap: wrap;
+}
+.tavern-actions .tavern-field {
+  width: 85px;
+}
+.tavern-actions label,
+.tavern-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tavern-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+}
+.tavern-footer > span,
+.tavern-save-state {
+  color: var(--dsw-alias-brand-text);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.tavern-footer .tavern-actions {
+  justify-content: flex-end;
+}
+.tavern-footer button {
+  max-width: 260px;
+  white-space: normal;
+  height: auto;
+  min-height: var(--mn-action-height);
+  padding: 9px 15px;
+}
+.tavern-lore {
+  padding: 16px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 14px;
+  background: var(--dsw-alias-bg-base);
+  display: grid;
+  gap: 12px;
+}
+.tavern-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.tavern-error {
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 13px;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+.tavern-muted,
+.tavern-empty {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.tavern-empty {
+  padding: 46px 20px;
+  text-align: center;
+}
+.tavern-empty > svg {
+  color: var(--dsw-alias-brand-text);
+  margin-bottom: 14px;
+}
+.tavern-empty p {
+  max-width: 300px;
+  margin: 10px auto 22px;
+}
+.tavern-empty-actions {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.tavern-fields details {
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: var(--dsw-alias-bg-base);
+}
+.tavern-fields details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsw-alias-brand-text);
+}
+.tavern-fields details[open] summary {
+  margin-bottom: 14px;
+}
+.tavern-fields details .tavern-field {
+  margin-bottom: 14px;
+}
+.tavern-fields details .tavern-field:last-child {
+  margin-bottom: 0;
+}
+.tavern-protocol-select {
+  width: 100%;
+}
+.tavern-connection {
+  flex-shrink: 0;
+  padding: 10px 0 24px;
+  gap: 18px;
+}
+.tavern-connection .tavern-actions {
+  padding-top: 4px;
+}
+.tavern-connection .tavern-actions > button {
+  min-height: var(--mn-action-height);
+}
+.tavern-connection > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--dsw-alias-brand-text);
+}
+.tavern-connection > p:empty {
+  display: none;
+}
+.tavern-character-bar {
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  cursor: pointer;
+  max-width: 768px;
+  width: calc(100% - 32px);
+  margin: 8px auto;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+}
+.tavern-character-bar > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.tavern-bar-action {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tavern-scene-curtain {
+  margin: 18px auto 20px;
+  max-width: 620px;
+  padding: 10px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--mn-glass-bg, var(--dsw-alias-bg-layer-2));
+  backdrop-filter: blur(14px);
+  text-align: center;
+  box-shadow: var(--mn-card-shadow);
+}
+.tavern-scene-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dsw-alias-brand-text);
+  margin-bottom: 4px;
+}
+.tavern-scene-curtain p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--dsw-alias-label-secondary);
+}
+body[data-mn-ui='ds'] .tavern-scene-curtain {
+  display: none;
+}
+
+.tavern-greeting {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 18px 0 22px;
+}
+.tavern-greeting-avatar {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.tavern-greeting-avatar .tavern-portrait {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.tavern-greeting-body {
+  flex: 1;
+  min-width: 0;
+}
+.tavern-greeting-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+.tavern-greeting-title strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dsw-alias-brand-text);
+}
+.tavern-greeting-title span {
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mn-selection);
+  color: var(--dsw-alias-brand-text);
+}
+.tavern-greeting-swipe {
+  margin-left: auto;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+.tavern-greeting-swipe:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+}
+
+.tavern-empty-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.tavern-empty-stage .tavern-empty {
+  padding: 20px 16px 8px;
+}
+.tavern-template-section {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.tavern-section-caption {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dsw-alias-brand-text);
+}
+.tavern-preset-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.tavern-preset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-base);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    transform 140ms ease;
+}
+.tavern-preset-card:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+  transform: translateY(-1px);
+}
+.tavern-preset-card.is-active {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+  box-shadow: 0 0 0 1px var(--dsw-alias-brand-primary);
+}
+.tavern-preset-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tavern-preset-card-head strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+.tavern-preset-card-head em {
+  font-style: normal;
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mn-selection);
+  color: var(--dsw-alias-brand-text);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.tavern-preset-card > span {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tavern-monologue-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 15px;
+  border-radius: 14px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-base);
+  cursor: pointer;
+}
+.tavern-monologue-toggle > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tavern-monologue-toggle strong {
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary);
+}
+.tavern-monologue-toggle span {
+  font-size: 11.5px;
+  color: var(--dsw-alias-label-secondary);
+}
+.tavern-monologue-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--dsw-alias-brand-primary);
+  flex-shrink: 0;
+}
+
+.tavern-alt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  background: var(--dsw-alias-bg-base);
+}
+.tavern-alt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-secondary);
+}
+.tavern-chip-action {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tavern-chip-action:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+}
+.tavern-alt-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tavern-alt-item textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 11px;
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.tavern-alt-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.tavern-alt-item-top button {
+  border: 0;
+  background: none;
+  color: var(--dsw-alias-state-error-primary);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.tavern-memory-snippets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tavern-memory-snippets button {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-brand-text);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.tavern-memory-snippets button:hover:not(:disabled) {
+  border-style: solid;
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+}
+
+@media (max-width: 767px) {
+  .tavern-preset-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.tavern-greeting-bubble {
+  padding: 15px 19px;
+  border-radius: 4px 20px 20px 20px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--mn-glass-bg, var(--dsw-alias-bg-layer-2));
+  backdrop-filter: blur(18px);
+  box-shadow: var(--mn-card-shadow);
+}
+.tavern-greeting .ds-markdown {
+  font-size: var(--mn-chat-font-size, 15.5px);
+  line-height: 1.85;
+}
+body[data-mn-ui='ds'] .tavern-greeting-avatar,
+body[data-mn-ui='ds'] .tavern-greeting-title {
+  display: none;
+}
+body[data-mn-ui='ds'] .tavern-greeting-bubble {
+  border-radius: 0;
+  border: 0;
+  border-left: 2px solid var(--dsw-alias-brand-text);
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  padding: 8px 16px;
+}
+
+.tavern-preset-avatars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tavern-preset-thumb {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--dsw-alias-border-l2);
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  transition:
+    transform 150ms,
+    border-color 150ms;
+}
+.tavern-preset-thumb:hover {
+  transform: scale(1.08);
+}
+.tavern-preset-thumb.is-active {
+  border-color: var(--dsw-alias-brand-primary);
+  box-shadow: 0 0 0 2px var(--mn-focus-ring);
+}
+.tavern-preset-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 16%;
+  display: block;
+}
+.tavern-url-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12.5px;
+}
+.tavern-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 6px;
+}
+.tavern-profile-actions {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.tavern-profile-actions > span {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+  line-height: 1.6;
+}
+.tavern-favorite-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-base);
+  border-radius: 999px;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    border-color 150ms,
+    background-color 150ms,
+    color 150ms;
+}
+.tavern-favorite-button:hover {
+  border-color: var(--dsw-alias-brand-primary);
+}
+.tavern-favorite-button[aria-pressed='true'] {
+  color: var(--dsw-alias-brand-primary);
+  background: var(--mn-selection);
+  border-color: var(--dsw-alias-button-ghost-active-border);
+}
+.tavern-text-button,
+.tavern-no-results button {
+  font: inherit;
+  font-size: 12px;
+  border: 0;
+  background: none;
+  color: var(--dsw-alias-brand-text);
+  cursor: pointer;
+}
+.tavern-no-results {
+  text-align: center;
+  padding: 24px 8px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+.tavern-binding {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--mn-selection);
+  font-size: 11px;
+  color: var(--dsw-alias-brand-text);
+  overflow-wrap: anywhere;
+}
+.tavern-memory-dialog {
+  width: 620px;
+  max-height: 90dvh;
+}
+.tavern-memory-dialog > div:nth-child(2) {
+  overflow-y: auto;
+}
+.tavern-memory-dialog textarea {
+  max-height: 48dvh;
+}
+.tavern-memory-count {
+  color: var(--dsw-alias-label-tertiary);
+  text-align: right;
+  font-size: 11px;
+  padding: 8px 0;
+}
+.tavern-save-state {
+  margin-right: auto;
+  align-self: center;
+}
+.tavern-unsaved-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.tavern-dialog button:focus-visible,
+.tavern-character-bar:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-text);
+  outline-offset: 2px;
+}
+.tavern-dialog button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (max-width: 640px) {
+  .tavern-dialog {
+    width: 100%;
+    max-height: 94dvh;
+    padding: 16px !important;
+  }
+  .tavern-main {
+    flex-direction: column;
+    height: 65dvh;
+    overflow-y: auto !important;
+  }
+  .tavern-rail {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--dsw-alias-border-l2);
+    gap: 10px;
+  }
+  .tavern-rail > .tavern-actions {
+    flex-wrap: nowrap;
+  }
+  .tavern-character-list {
+    display: flex;
+    gap: 8px;
+    flex: 0 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-padding-inline: 4px;
+  }
+  .tavern-character-list::-webkit-scrollbar {
+    display: none;
+  }
+  .tavern-character-list .tavern-character {
+    width: auto;
+    max-width: 180px;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    margin: 0;
+  }
+  .tavern-character-list .tavern-portrait-m {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .tavern-editor {
+    flex: 0 0 auto;
+    padding: 0 16px 16px;
+    overflow: visible;
+  }
+  .tavern-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 8px 0;
+  }
+  .tavern-tabs button {
+    justify-content: center;
+    min-width: 0;
+    min-height: 40px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    line-height: 18px;
+  }
+  .tavern-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .tavern-footer .tavern-actions {
+    gap: 8px;
+  }
+  .tavern-footer button {
+    flex: 1;
+    max-width: none;
+    min-width: 0;
+    font-size: 13px;
+  }
+  .tavern-footer .tavern-actions > button:first-child:nth-last-child(3) {
+    flex-basis: 100%;
+  }
+  .tavern-grid {
+    grid-template-columns: 1fr;
+  }
+  .tavern-profile {
+    gap: 10px;
+  }
+  .tavern-portrait-hero {
+    width: 56px;
+    height: 70px;
+    font-size: 26px;
+  }
+  .tavern-greeting {
+    padding: 16px;
+    margin: 16px 0 18px;
+  }
+  .tavern-bar-action {
+    font-size: 0;
+    gap: 0;
+  }
+  .tavern-character-list .tavern-no-results {
+    padding: 0;
+    text-align: left;
+  }
+  .tavern-character-list .tavern-no-results p {
+    margin: 0 0 6px;
+  }
+}
+
+.tavern-field :is(input, textarea):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tavern-field :is(input, textarea)::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+.tavern-field :is(input, textarea):hover:not(:disabled) {
+  border-color: var(--dsw-alias-border-l3);
+}
+.tavern-text-button,
+.tavern-no-results button {
+  min-height: 36px;
+  border-radius: 10px;
+}
+@media (max-width: 767px) {
+  .tavern-field :is(input, textarea),
+  .tavern-search input {
+    font-size: 16px;
+  }
+  .tavern-unsaved-actions {
+    width: 100%;
+  }
+  .tavern-unsaved-actions > button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+@media (max-width: 380px) {
+  .tavern-footer .tavern-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .tavern-footer button {
+    width: 100%;
+  }
+  .tavern-profile {
+    flex-wrap: wrap;
+  }
+  .tavern-profile-actions {
+    min-width: 100px;
+  }
+}

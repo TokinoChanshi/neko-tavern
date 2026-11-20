@@ -4,14 +4,20 @@ import { normalizeLocation, type UserLocation } from './location.js'
 
 export type Locale = 'zh-CN' | 'en-US'
 
-/** 主题偏好；默认跟随系统 */
+/** 明暗偏好；默认跟随系统 */
 export type ThemePreference = 'light' | 'dark' | 'system'
 
-/** 本机设置，存 localStorage：API Key、语言、主题、位置、朗读音色、深度思考与智能搜索开关、侧边栏收起状态 */
+/** 酒馆多主题配色（针对女性向柔和审美调校） */
+export type ThemePalette = 'rose' | 'lilac' | 'latte' | 'celadon'
+
+export const THEME_PALETTES: readonly ThemePalette[] = ['rose', 'lilac', 'latte', 'celadon']
+
+/** 本机设置，存 localStorage：API Key、语言、主题、配色、位置、朗读音色、深度思考与智能搜索开关、侧边栏收起状态 */
 type Settings = {
   apiKey: string | null
   locale: Locale
   themePreference: ThemePreference
+  themePalette: ThemePalette
   location: UserLocation | null
   ttsVoice: TtsVoice
   thinking: boolean
@@ -24,6 +30,7 @@ const KEYS = {
   locale: 'chat-demo:locale',
   location: 'chat-demo:location',
   themePreference: 'chat-demo:theme-preference',
+  themePalette: 'chat-demo:theme-palette',
   ttsVoice: 'chat-demo:tts-voice',
   thinking: 'chat-demo:thinking',
   search: 'chat-demo:search',
@@ -84,6 +91,14 @@ const initialThemePreference = (): ThemePreference => {
   return saved === 'light' || saved === 'dark' ? saved : 'system'
 }
 
+/** 未保存过时默认使用「白桃乌龙」柔和玫瑰主题 */
+const initialThemePalette = (): ThemePalette => {
+  const saved = read(KEYS.themePalette)
+  return saved === 'rose' || saved === 'lilac' || saved === 'latte' || saved === 'celadon'
+    ? saved
+    : 'rose'
+}
+
 /** 未保存过时使用服务端默认音色 stella（海星） */
 const initialTtsVoice = (): TtsVoice => (read(KEYS.ttsVoice) === 'tide' ? 'tide' : 'stella')
 
@@ -92,6 +107,7 @@ export const useSettings = create<Settings>(() => ({
   locale: initialLocale(),
   location: initialLocation(),
   themePreference: initialThemePreference(),
+  themePalette: initialThemePalette(),
   ttsVoice: initialTtsVoice(),
   thinking: read(KEYS.thinking) === 'true',
   search: read(KEYS.search) === 'true',
@@ -112,6 +128,18 @@ export const setLocation = (value: UserLocation | null) => {
 export const setThemePreference = (themePreference: ThemePreference) => {
   write(KEYS.themePreference, themePreference)
   useSettings.setState({ themePreference })
+}
+
+export const setThemePalette = (themePalette: ThemePalette) => {
+  write(KEYS.themePalette, themePalette)
+  useSettings.setState({ themePalette })
+}
+
+export const cycleThemePalette = () => {
+  const current = useSettings.getState().themePalette
+  const index = THEME_PALETTES.indexOf(current)
+  const next = THEME_PALETTES[(index + 1) % THEME_PALETTES.length] ?? 'rose'
+  setThemePalette(next)
 }
 
 export const setTtsVoice = (ttsVoice: TtsVoice) => {

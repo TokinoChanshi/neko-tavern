@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { initAppearanceAssets, useAppearance } from '../services/appearance.js'
 import { useSettings, type ThemePreference } from '../services/settings.js'
 
 export type Theme = 'light' | 'dark'
@@ -15,7 +16,6 @@ const getOsTheme = (): Theme => (query.matches ? 'dark' : 'light')
 const resolveTheme = (preference: ThemePreference, osTheme: Theme): Theme =>
   preference === 'system' ? osTheme : preference
 
-/** 当前实际生效的深浅色：手动选择优先，「跟随系统」时取系统设置 */
 export const useTheme = (): Theme => {
   const preference = useSettings((state) => state.themePreference)
   const osTheme = useSyncExternalStore(subscribeOsTheme, getOsTheme)
@@ -28,10 +28,17 @@ const syncPageBackground = () => {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', backgroundColor)
 }
 
-/** 同步页面主题、根画布背景和支持 theme-color 的浏览器栏。 */
-const applyTheme = (theme: Theme) => {
+const syncAppearanceAttributes = () => {
   const body = document.body
-  // 主题切换帧禁用过渡，使页面颜色同步更新
+  const app = useAppearance.getState()
+  const isDs = app.uiMode === 'ds'
+  const effectiveSkin = isDs ? app.dsSkin : app.skin
+  const osTheme = getOsTheme()
+  const theme: Theme =
+    effectiveSkin === 'obsidian'
+      ? 'dark'
+      : resolveTheme(useSettings.getState().themePreference, osTheme)
+
   body.classList.add('change-theme')
   body.classList.toggle('dark', theme === 'dark')
   body.classList.toggle('light', theme === 'light')
@@ -40,8 +47,19 @@ const applyTheme = (theme: Theme) => {
   } else {
     body.removeAttribute('data-ds-dark-theme')
   }
+
+  // mobile 视图下底层对话样式复用 companion 的气泡与主题皮肤
+  body.setAttribute('data-mn-ui', isDs ? 'ds' : 'companion')
+  body.setAttribute('data-mn-shell', app.uiMode)
+  body.setAttribute('data-mn-skin', effectiveSkin)
+  body.setAttribute('data-mn-layout', isDs ? 'minimal' : app.stageLayout)
+  body.setAttribute('data-mn-material', app.bubbleMaterial)
+  body.setAttribute('data-mn-font', app.fontStyle)
+  body.setAttribute('data-mn-scale', app.fontScale)
+  body.setAttribute('data-mn-width', app.chatWidth)
+  body.setAttribute('data-mn-dialogue', !isDs && app.dialogueHighlight ? 'on' : 'off')
+
   document.documentElement.style.colorScheme = theme
-  // 首次背景色同步在样式表加载完成后执行，适配 WebKit 的 defer 脚本执行顺序。
   if (document.readyState === 'complete') {
     syncPageBackground()
   }
@@ -50,22 +68,13 @@ const applyTheme = (theme: Theme) => {
   }, 0)
 }
 
-let appliedTheme: Theme | null = null
-
-const syncTheme = () => {
-  const theme = resolveTheme(useSettings.getState().themePreference, getOsTheme())
-  if (theme !== appliedTheme) {
-    appliedTheme = theme
-    applyTheme(theme)
-  }
-}
-
-/** 首屏渲染前同步应用一次，之后随主题设置与系统深浅色变化更新 */
 export const setupTheme = () => {
-  syncTheme()
+  syncAppearanceAttributes()
+  void initAppearanceAssets()
   if (document.readyState !== 'complete') {
     window.addEventListener('load', syncPageBackground, { once: true })
   }
-  query.addEventListener('change', syncTheme)
-  useSettings.subscribe(syncTheme)
+  query.addEventListener('change', syncAppearanceAttributes)
+  useSettings.subscribe(syncAppearanceAttributes)
+  useAppearance.subscribe(syncAppearanceAttributes)
 }

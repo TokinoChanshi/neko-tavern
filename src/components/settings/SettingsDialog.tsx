@@ -13,11 +13,24 @@ import {
   BackupError,
   clearHistory,
   exportHistory,
+  exportNativeHistory,
   importHistory,
 } from '../../services/chat/backup.js'
-import { useIsMobile } from '../../app/viewport.js'
+import { ConnectionFields, useConnectionEditor } from '../tavern/ConnectionFields.js'
+import { downloadJson } from '../tavern/TavernDialog.js'
+import { UnsavedDialog, useUnsavedWarning } from '../tavern/UnsavedDialog.js'
+import { TavernIcon } from '../tavern/TavernIcon.js'
+import { useTavernText } from '../tavern/text.js'
 import { useChatStore } from '../../services/chat/store.js'
 import { regionCodes, getRegionName, provinces } from '../../services/location.js'
+import {
+  DS_THEMES,
+  openAppearanceDrawer,
+  setUIMode,
+  updateAppearance,
+  useAppearance,
+  type SkinId,
+} from '../../services/appearance.js'
 import {
   isChineseBrowser,
   setLocale,
@@ -32,13 +45,11 @@ import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
-import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
 
 /**
- * 设置弹窗：分「通用设置」（主题、语言、朗读音色、位置）与「数据管理」（API Key、导入、导出、删除）。
- * 桌面端为居中弹窗、左侧导航；移动端为底部弹层、导航横排在内容上方
+ * 设置弹窗：分「外观与通用」（多主题配色、明暗模式、语言、朗读音色、位置）、「模型连接」与「备份与数据」。
  */
 export const SettingsDialog = () => {
   const open = useSettingsDialog((state) => state.open)
@@ -51,16 +62,20 @@ const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode
     label: 'settingDialogAsideGeneralOptionLabel',
     icon: <IconSettingsOutline16 />,
   },
+  {
+    value: 'connection',
+    label: 'settingDialogAsideConnectionOptionLabel',
+    icon: <TavernIcon name="link" size={16} />,
+  },
   { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
 ]
 
 const SettingsContent = () => {
   const t = useTranslate()
-  const isMobile = useIsMobile()
-  // 打开时按调用方指定的分组选中，之后在弹窗内切换
   const [section, setSection] = useState(() => useSettingsDialog.getState().section)
-  // 切换分组不丢失正在输入的 API Key 与导入状态
-  const apiKeyEditor = useApiKeyEditor()
+  const connectionEditor = useConnectionEditor()
+  const [closing, setClosing] = useState(false)
+  useUnsavedWarning(connectionEditor.dirty)
   const historyImport = useHistoryImport()
   const historyDelete = useHistoryDelete()
   const replacingHistory = useChatStore((state) => state.importingHistory)
@@ -73,8 +88,12 @@ const SettingsContent = () => {
         className={styles.dialog}
         mainClassName={styles.dialogMain}
         onClose={() => {
-          if (!historyDelete.busy) {
-            closeSettings()
+          if (!historyDelete.busy && !connectionEditor.busy) {
+            if (connectionEditor.dirty) {
+              setClosing(true)
+            } else {
+              closeSettings()
+            }
           }
         }}
       >
@@ -96,15 +115,18 @@ const SettingsContent = () => {
         <div role="tabpanel" className={styles.content}>
           {section === 'general' ? (
             <>
+              <PaletteSetting />
               <ThemeSetting />
               <LocaleSetting />
               <TtsVoiceSetting />
               <LocationSetting />
             </>
+          ) : section === 'connection' ? (
+            <ConnectionFields editor={connectionEditor} />
           ) : (
             <>
-              <ApiKeyField editor={apiKeyEditor} />
               <ImportHistory historyImport={historyImport} disabled={historyBusy} />
+              <NativeBackup disabled={historyBusy} />
               <ExportHistory disabled={historyBusy} />
               <SettingCell
                 label={t('deleteAllSessions')}
@@ -121,14 +143,144 @@ const SettingsContent = () => {
                   </Button>
                 }
               />
-              {isMobile ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
             </>
           )}
         </div>
       </Modal>
+      {closing ? (
+        <UnsavedDialog
+          busy={connectionEditor.busy || connectionEditor.streaming}
+          error={connectionEditor.error}
+          onCancel={() => setClosing(false)}
+          onDiscard={closeSettings}
+          onSave={() => {
+            void connectionEditor.save(false).then((ok) => {
+              if (ok) {
+                closeSettings()
+              }
+            })
+          }}
+        />
+      ) : null}
       {historyImport.file ? <ImportConfirm historyImport={historyImport} /> : null}
       {historyDelete.opened ? <DeleteAllConfirm historyDelete={historyDelete} /> : null}
     </>
+  )
+}
+
+const PALETTE_ITEMS: {
+  value: SkinId
+  name: string
+  desc: string
+  preview: string
+}[] = [
+  { value: 'sakura', name: '樱雾白桃', desc: '甜美晶透 · 玫瑰金', preview: 'preview_rose' },
+  { value: 'starlight', name: '深空星夜', desc: '极光雾紫 · 宿命感', preview: 'preview_lilac' },
+  { value: 'salon', name: '丝绒红茶', desc: '复古猫咖 · 暖琥珀', preview: 'preview_latte' },
+  { value: 'celadon', name: '森屿青提', desc: '烟雨青瓷 · 氧气感', preview: 'preview_celadon' },
+]
+
+/** 设置内的快捷主题与装扮工坊入口 */
+const PaletteSetting = () => {
+  const activeSkin = useAppearance((state) => state.skin)
+  const dsSkin = useAppearance((state) => state.dsSkin)
+  const uiMode = useAppearance((state) => state.uiMode)
+  return (
+    <div className={styles.paletteSection}>
+      <div className={styles.row} style={{ marginBottom: 12 }}>
+        <div className={styles.text} style={{ paddingRight: 12 }}>
+          <div className={styles.label}>外观与装扮工坊（三端形态 / DS 专属主题 / 壁纸 / 气泡）</div>
+          <div className={styles.description}>
+            支持一键切换「宽屏酒馆」「手机 APP 模式」与「DS 经典原版 UI（含 6 款专属主题）」
+          </div>
+        </div>
+        <Button
+          size="m"
+          onClick={() => {
+            closeSettings()
+            openAppearanceDrawer()
+          }}
+        >
+          打开装扮工坊
+        </Button>
+      </div>
+
+      <div className={styles.themeOptions} style={{ marginBottom: 12 }}>
+        <button
+          type="button"
+          className={clsx(styles.themeOption, uiMode === 'companion' && styles.themeOptionSelected)}
+          style={{ height: 52, padding: '8px 12px' }}
+          onClick={() => setUIMode('companion')}
+        >
+          宽屏沉浸酒馆
+        </button>
+        <button
+          type="button"
+          className={clsx(styles.themeOption, uiMode === 'mobile' && styles.themeOptionSelected)}
+          style={{ height: 52, padding: '8px 12px' }}
+          onClick={() => {
+            closeSettings()
+            setUIMode('mobile')
+          }}
+        >
+          手机 APP 模式
+        </button>
+        <button
+          type="button"
+          className={clsx(styles.themeOption, uiMode === 'ds' && styles.themeOptionSelected)}
+          style={{ height: 52, padding: '8px 12px' }}
+          onClick={() => setUIMode('ds')}
+        >
+          DS 原版经典 UI
+        </button>
+      </div>
+
+      {uiMode === 'ds' ? (
+        <div className={styles.paletteGrid}>
+          {DS_THEMES.map((item) => {
+            const selected = dsSkin === item.id
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={clsx(styles.paletteCard, selected && styles.paletteCardSelected)}
+                onClick={() => updateAppearance({ dsSkin: item.id })}
+              >
+                <span className={styles.palettePreview} style={{ background: item.dotColor }} />
+                <span className={styles.paletteMeta}>
+                  <strong>{item.name}</strong>
+                  <small>{item.tag}</small>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        <div className={styles.paletteGrid}>
+          {PALETTE_ITEMS.map((item) => {
+            const selected = activeSkin === item.value
+            return (
+              <button
+                key={item.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={clsx(styles.paletteCard, selected && styles.paletteCardSelected)}
+                onClick={() => updateAppearance({ skin: item.value })}
+              >
+                <span className={clsx(styles.palettePreview, styles[item.preview])} />
+                <span className={styles.paletteMeta}>
+                  <strong>{item.name}</strong>
+                  <small>{item.desc}</small>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -331,7 +483,7 @@ const ImportConfirm = ({
           <Button variant="outlined" size="m" autoFocus onClick={historyImport.cancel}>
             {t('cancel')}
           </Button>
-          <Button variant="dangerOutlined" size="m" onClick={() => void historyImport.confirm()}>
+          <Button size="m" onClick={() => void historyImport.confirm()}>
             {t('historyImportConfirm')}
           </Button>
         </>
@@ -360,17 +512,15 @@ const themeOptions: { value: ThemePreference; label: TranslationKey; icon: React
   },
 ]
 
-/**
- * 主题项：标题下方浅色 / 深色 / 跟随系统三个选块。
- * 与下方语言选项连续排列。
- */
 const ThemeSetting = () => {
   const t = useTranslate()
   const themePreference = useSettings((state) => state.themePreference)
   const label = t('avatarMenuSettingsDialogThemeItemLabel')
   return (
     <div className={styles.theme}>
-      {label}
+      <div className={styles.sectionHeading}>
+        <span>{label}</span>
+      </div>
       <div role="radiogroup" aria-label={label} className={styles.themeOptions}>
         {themeOptions.map((option) => (
           <button
@@ -436,7 +586,6 @@ const SettingCell = ({
   )
 }
 
-/** 选文件后先提示覆盖；确认后才检查文件并执行导入，任何错误都提示导入失败。 */
 const useHistoryImport = () => {
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
@@ -454,8 +603,8 @@ const useHistoryImport = () => {
     try {
       const count = await importHistory(file)
       setStatus({ key: count === 1 ? 'historyImportedOne' : 'historyImported', params: { count } })
-    } catch {
-      setStatus({ key: 'historyImportFailed', error: true })
+    } catch (error) {
+      setStatus(errorStatus('historyImportFailed', error))
     } finally {
       importing.current = false
       setBusy(false)
@@ -465,7 +614,6 @@ const useHistoryImport = () => {
   return { file, busy, status, select: setFile, cancel: () => setFile(null), confirm }
 }
 
-/** 导入 = 覆盖：用选中文件替换本地全部会话与附件。 */
 const ImportHistory = ({
   historyImport,
   disabled,
@@ -496,7 +644,7 @@ const ImportHistory = ({
           <input
             ref={inputRef}
             type="file"
-            accept=".zip,application/zip,application/x-zip-compressed"
+            accept=".zip,.json,application/zip,application/json"
             hidden
             onChange={(event) => {
               const file = event.target.files?.[0]
@@ -507,6 +655,44 @@ const ImportHistory = ({
             }}
           />
         </>
+      }
+    />
+  )
+}
+
+const NativeBackup = ({ disabled }: { disabled: boolean }) => {
+  const tt = useTavernText()
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<Status>(null)
+  return (
+    <SettingCell
+      label={tt('backup')}
+      description={tt('backupDescription')}
+      status={status}
+      action={
+        <Button
+          variant="outlined"
+          size="m"
+          className={styles.cellButton}
+          disabled={disabled || busy}
+          onClick={async () => {
+            setBusy(true)
+            setStatus(null)
+            try {
+              downloadJson(
+                `neko-tavern-backup-${new Date().toISOString().slice(0, 10)}.json`,
+                await exportNativeHistory()
+              )
+            } catch (error) {
+              setStatus(errorStatus('historyExportFailed', error))
+            } finally {
+              setBusy(false)
+            }
+          }}
+        >
+          <IconDownloadOutline16 />
+          {tt('backupDownload')}
+        </Button>
       }
     />
   )

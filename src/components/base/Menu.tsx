@@ -43,7 +43,8 @@ export const Menu = ({
               role="menu"
             >
               {options.map((option) => (
-                <div
+                <button
+                  type="button"
                   key={option.key}
                   role="menuitem"
                   className={clsx(styles.option, option.danger && styles.danger)}
@@ -54,7 +55,7 @@ export const Menu = ({
                 >
                   <span className={styles.icon}>{option.icon}</span>
                   {option.label}
-                </div>
+                </button>
               ))}
             </div>,
             document.body
