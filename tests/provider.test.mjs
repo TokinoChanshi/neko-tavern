@@ -45,6 +45,21 @@ test('OpenAI payload preserves roleplay and strips DeepSeek-only extensions', ()
   assert.equal(result.max_tokens, 512)
 })
 
+test('OpenAI reasoning models use max_completion_tokens and drop temperature', () => {
+  const body = { messages: [{ role: 'user', content: 'hi' }], max_tokens: 256, temperature: 0.8 }
+  for (const model of ['gpt-6.2-sol', 'gpt-5', 'o4-mini']) {
+    const result = toOpenAIRequest(body, model)
+    assert.equal(result.max_completion_tokens, 256, model)
+    assert.equal(result.max_tokens, undefined, model)
+    assert.equal(result.temperature, undefined, model)
+  }
+  const legacy = toOpenAIRequest(body, 'gpt-4.1')
+  assert.equal(legacy.max_tokens, 256)
+  assert.equal(legacy.temperature, 0.8)
+  const compatible = toOpenAIRequest(body, 'deepseek-chat')
+  assert.equal(compatible.max_tokens, 256)
+})
+
 test('SSE handles split UTF-8 and converts reasoning/text/usage to native events', async () => {
   const data = [
     'data: {"choices":[{"delta":{"reasoning_content":"想"}}]}\r\n\r\n',

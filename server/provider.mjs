@@ -83,12 +83,15 @@ export function toOpenAIRequest(body, model, baseUrl = '') {
     const content = extractTextContent(message.content)
     if (content) messages.push({ role: message.role, content })
   }
+  // OpenAI 推理系模型（gpt-5 及以后、o 系列）只认 max_completion_tokens，且只接受默认 temperature。
+  const reasoningFamily = /^(gpt-([5-9]|\d{2,})|o\d)/i.test(String(resolvedModel))
+  const tokenKey = reasoningFamily ? 'max_completion_tokens' : 'max_tokens'
   return {
     model: resolvedModel,
     messages,
     stream: true,
-    ...(body.temperature === undefined ? {} : { temperature: body.temperature }),
-    ...(body.max_tokens === undefined ? {} : { max_tokens: body.max_tokens }),
+    ...(body.temperature === undefined || reasoningFamily ? {} : { temperature: body.temperature }),
+    ...(body.max_tokens === undefined ? {} : { [tokenKey]: body.max_tokens }),
   }
 }
 
